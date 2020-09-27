@@ -1,0 +1,60 @@
+I"�<p>Ionic v5 BrowserTab with Custom Tab Color</p>
+
+<p>BrowserTab plugin provides an interface to in-app browser tabs that exist on some mobile platforms, specifically Custom Tabs on Android (including the Chrome Custom Tabs implementation), and SFSafariViewController on iOS.</p>
+
+<p>The plugin we’ll be looking at today is a fork from the official <a href="https://github.com/google/cordova-plugin-browsertab">google/cordova-plugin-browsertab</a>. Since there are no active maintainers of the repository, developers are facing many issues with the plugin.</p>
+
+<p>Link for the fork with fixes and enabling BrowserTab with Custom Color:
+<a href="https://github.com/itsLucario/cordova-plugin-browsertab">https://github.com/itsLucario/cordova-plugin-browsertab</a></p>
+
+<h2 id="steps-to-get-it-working-for-your-app">Steps To Get It Working For Your App</h2>
+
+<p>First install the Ionic’s official browser tab JS library, which helps you to get easy access for the Cordova BrowserTab Plugin.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm install @ionic-native/browser-tab
+</code></pre></div></div>
+
+<p>After the installation, install the cordova-browser-tab plugin by using the below command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cordova plugin add @lucario/cordova-plugin-browsertab --variable CUSTOM_TAB_COLOR_RGB=”#ff0000"
+</code></pre></div></div>
+
+<p>You can change the variable CUSTOM_TAB_COLOR_RGB with whichever color you want in HEX format. Once the plugin gets installed, you can access the plugin in your Angular code as shown below.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import { BrowserTab } from ‘[@ionic](http://twitter.com/ionic)-native/browser-tab/ngx’;
+
+constructor(private browserTab: BrowserTab) {
+
+ browserTab.isAvailable()
+ .then(isAvailable =&gt; {
+ if (isAvailable) {
+ browserTab.openUrl(‘[https://ionic.io'](https://ionic.io'));
+ } else {
+ // open URL with InAppBrowser instead or SafariViewController
+ }
+ });
+}
+</code></pre></div></div>
+
+<p>Although the changing browser tab color feature is merged with master branch, they have not rolled this feature out to npm repository. That is the reason you won’t get custom color working when you try to install it from official repository.</p>
+
+<h2 id="points-you-should-keep-in-mind">Points you should keep in mind:</h2>
+
+<ul>
+  <li>
+    <p>This plugin can only take one color, which is set using variable CUSTOM_TAB_COLOR_RGB during the installation of the plugin.</p>
+  </li>
+  <li>
+    <p>Also, this plugin force opens custom tab with Google Chrome by default, which I haven’t found being done in any of the PR/forks. If the user doesn’t have Google Chrome installed in his/her device, an action choice will be shown. This will give a good user experience cause all links are force opened with Chrome tab without an asking prompt.</p>
+  </li>
+  <li>
+    <p>Unnecessary dependency “cordova-plugin-compat” is removed since its deprecated.</p>
+  </li>
+</ul>
+
+<p><a href="https://www.npmjs.com/package/@lucario/cordova-plugin-browsertab"><strong>@lucario/cordova-plugin-browsertab</strong></a></p>
+
+<p><a href="https://github.com/itsLucario/cordova-plugin-browsertab"><strong>itsLucario/cordova-plugin-browsertab</strong></a></p>
+
+<p>If this helps don’t forget to leave a comment 😉, it motivates me to write more.</p>
+:ET

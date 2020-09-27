@@ -1,6 +1,0 @@
-I"2<p>To “listen” to an event, we can always write the “listener” to an event as another method within the source of the event, but this will tightly couple the event source to the logic of the listener.</p>
-
-<p>With real events, we are more flexible than with direct method calls. We can dynamically register and deregister listeners to certain events as we wish. We can also have multiple listeners for the same event.</p>
-
-<p>This tutorial gives an overview of how to publish and listen to custom events and explains Spring Boot’s built-in events.</p>
-:ET

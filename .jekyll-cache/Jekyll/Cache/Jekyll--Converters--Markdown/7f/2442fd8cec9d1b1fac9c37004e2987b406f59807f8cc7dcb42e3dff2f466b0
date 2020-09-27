@@ -1,0 +1,263 @@
+I"�G<h2 id="what-is-packer">What is Packer?</h2>
+
+<p>Packer is easy to use and automates the creation of any type of machine image. It embraces modern configuration management by encouraging you to use a framework such as Chef or Puppet to install and configure the software within your Packer-made images.</p>
+
+<p>Through out this article I have marked direct hyperlinks to Packer official docs whereever necessary.</p>
+
+<h2 id="advantages-of-using-packer">Advantages of Using Packer</h2>
+
+<ul>
+  <li>
+    <p><strong><em>Super fast infrastructure deployment:</em></strong> Packer images allow you to launch completely provisioned and configured machines in seconds, rather than several minutes or hours.</p>
+  </li>
+  <li>
+    <p><strong><em>Multi-provider portability:</em></strong> Because Packer creates identical images for multiple platforms, you can run production in AWS, staging/QA in a private cloud like OpenStack, and development in desktop virtualization solutions such as VMware or VirtualBox. Each environment is running an identical machine image, giving ultimate portability.</p>
+  </li>
+  <li>
+    <p><strong><em>Improved stability:</em></strong> Packer installs and configures all the software for a machine at the time the image is built. If there are bugs in these scripts, they’ll be caught early, rather than several minutes after a machine is launched.</p>
+  </li>
+  <li>
+    <p><strong><em>Greater testability:</em></strong> After a machine image is built, that machine image can be quickly launched and smoke tested to verify that things appear to be working.</p>
+  </li>
+</ul>
+
+<h2 id="key-packer-terminologies">Key Packer Terminologies</h2>
+
+<p>The terminology is in alphabetical order for quick referencing.</p>
+
+<ul>
+  <li>
+    <p><strong>Artifacts</strong> are the results of a single build, and are usually a set of IDs or files to represent a machine image. Every builder produces a single artifact. As an example, in the case of the Amazon EC2 builder, the artifact is a set of AMI IDs (one per region). For the VMware builder, the artifact is a directory of files comprising the created virtual machine.</p>
+  </li>
+  <li>
+    <p><strong>Builds</strong> are a single task that eventually produces an image for a single platform. Multiple builds run in parallel. Example usage in a sentence: “The Packer build produced an AMI to run our web application.” Or: “Packer is running the builds now for VMware, AWS, and VirtualBox.”</p>
+  </li>
+  <li>
+    <p><strong>Builders</strong> are components of Packer that are able to create a machine image for a single platform. Builders read in some configuration and use that to run and generate a machine image. A builder is invoked as part of a build in order to create the actual resulting images. Example builders include VirtualBox, VMware, and Amazon EC2. Builders can be created and added to Packer in the form of plugins.</p>
+  </li>
+  <li>
+    <p><strong>Commands</strong> are sub-commands for the packer program that perform some job. An example command is “build”, which is invoked as packer build. Packer ships with a set of commands out of the box in order to define its command-line interface.</p>
+  </li>
+  <li>
+    <p><strong>Post-processors</strong> are components of Packer that take the result of a builder or another post-processor and process that to create a new artifact. Examples of post-processors are compress to compress artifacts, upload to upload artifacts, etc.</p>
+  </li>
+  <li>
+    <p><strong>Provisioners</strong> are components of Packer that install and configure software within a running machine prior to that machine being turned into a static image. They perform the major work of making the image contain useful software. Example provisioners include shell scripts, Chef, Puppet, etc.</p>
+  </li>
+  <li>
+    <p><strong>Templates</strong> are JSON files which define one or more builds by configuring the various components of Packer. Packer is able to read a template and use that information to create multiple machine images in parallel.</p>
+  </li>
+</ul>
+
+<p>We’ll look more at Builders, Provisioners &amp; Post-Processors later in this article.</p>
+
+<h2 id="installing-hashicorp-packer">Installing Hashicorp Packer</h2>
+
+<p>Packer may be installed in the following ways by visiting the official packer downloads page: <a href="https://www.packer.io/downloads.html">https://www.packer.io/downloads.html</a></p>
+
+<h2 id="basic-ready-to-use-template">Basic Ready to Use Template</h2>
+
+<script src="https://gist.github.com/itsLucario/fcdc2fe790a4e63cb5b2c3974dba135a.js"></script>
+
+<p>When building, we’ll pass in aws_access_key and aws_secret_key as <a href="https://www.packer.io/docs/templates/user-variables.html">user variables</a>, keeping your secret keys out of the template.</p>
+
+<h2 id="environment-variables">Environment variables</h2>
+
+<p>You can provide your credentials via the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, environment variables, representing your AWS Access Key and AWS Secret Key, respectively. Note that setting your AWS credentials using either these environment variables will override the use of AWS_SHARED_CREDENTIALS_FILE and AWS_PROFILE. The AWS_DEFAULT_REGION and AWS_SESSION_TOKEN environment variables are also used, if applicable:</p>
+
+<p><strong>Usage:</strong></p>
+
+<p>export AWS_ACCESS_KEY_ID=”anaccesskey”</p>
+
+<p>export AWS_SECRET_ACCESS_KEY=”asecretkey”</p>
+
+<p>export AWS_DEFAULT_REGION=”us-west-2”</p>
+
+<h2 id="shared-credentials-file">Shared Credentials file</h2>
+
+<p>You can use an AWS credentials file to specify your credentials. The default location is <code class="language-plaintext highlighter-rouge">$HOME/.aws/credentials</code> on Linux and OS X, or <code class="language-plaintext highlighter-rouge">“%USERPROFILE%\.aws\credentials”</code> for Windows users. If we fail to detect credentials inline, or in the environment, Packer will check this location. You can optionally specify a different location in the configuration by setting the environment with the AWS_SHARED_CREDENTIALS_FILE variable.</p>
+
+<p>The format for the credentials file is like so</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[default]
+aws_access_key_id=&lt;your access key id&gt;
+aws_secret_access_key=&lt;your secret access key&gt;
+</code></pre></div></div>
+
+<p>You may also configure the profile to use by setting the profile configuration option, or setting the AWS_PROFILE environment variable:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "profile": "customprofile",
+  "region": "us-east-1",
+  "type": "amazon-ebs"
+}
+</code></pre></div></div>
+
+<h2 id="what-are-builders">What are Builders?</h2>
+
+<p>A builder is a component of Packer that is responsible for creating a machine and turning that machine into an image. The builders section contains an array of JSON objects configuring a specific <em>builder</em>.</p>
+
+<p>In this case, we’re only configuring a single builder of type amazon-ebs. This is the Amazon EC2 AMI builder that ships with Packer. This builder builds an EBS-backed AMI by launching a source AMI, provisioning on top of that, and re-packaging it into a new AMI.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"builders": [{
+  "type": "amazon-ebs",
+  "access_key": "{{user `aws_access_key`}}",
+  "secret_key": "{{user `aws_secret_key`}}",
+  "region": "us-east-1",
+  "source_ami_filter": {
+    "filters": {
+      "virtualization-type": "hvm",
+      "name": "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*",
+      "root-device-type": "ebs"
+    },
+    "owners": ["099720109477"],
+    "most_recent": **true
+  **},
+  "instance_type": "t2.micro",
+  "ssh_username": "ubuntu",
+  "ami_name": "packer-example "
+}]
+</code></pre></div></div>
+
+<p><strong>Required Properties for Builder:</strong></p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#access_key">access_key</a> (string) — The access key used to communicate with AWS. <a href="https://www.packer.io/docs/builders/amazon.html#specifying-amazon-credentials">Learn how to set this</a>. This is not required if you are using use_vault_aws_engine for authentication instead.</p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#ami_name">ami_name</a> (string) — The name of the resulting AMI that will appear when managing AMIs in the AWS console or via APIs. This must be unique. To help make this unique, use a function like timestamp (see <a href="https://www.packer.io/docs/templates/engine.html">template engine</a> for more info).</p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#instance_type">instance_type</a> (string) — The EC2 instance type to use while building the AMI, such as t2.small.</p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#region">region</a> (string) — The name of the region, such as us-east-1, in which to launch the EC2 instance to create the AMI.</p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#secret_key">secret_key</a> (string) — The secret key used to communicate with AWS. <a href="https://www.packer.io/docs/builders/amazon.html#specifying-amazon-credentials">Learn how to set this</a>. This is not required if you are using use_vault_aws_engine for authentication instead.</p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#source_ami">source_ami</a> (string) — The initial AMI used as a base for the newly created machine. source_ami_filter may be used instead to populate this automatically.</p>
+
+<p><strong>Optional:</strong></p>
+
+<p><a href="https://www.packer.io/docs/builders/amazon-ebs.html#source_ami_filter">source_ami_filter</a> (object) — Filters used to populate the source_ami field.</p>
+
+<p>This selects the most recent Ubuntu 16.04 HVM EBS AMI from Canonical. NOTE: This will fail unless exactly one AMI is returned. In the above example, most_recent will cause this to succeed by selecting the newest image.</p>
+
+<p><strong>filters</strong> (map of strings) — filters used to select a source_ami. NOTE: This will fail unless exactly one AMI is returned. Any filter described in the docs for <a href="http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeImages.html">DescribeImages</a> is valid.</p>
+
+<p><strong>owners</strong> (array of strings) — Filters the images by their owner. You may specify one or more AWS account IDs, “self” (which will use the account whose credentials you are using to run Packer), or an AWS owner alias: for example, amazon, aws-marketplace, or microsoft. This option is required for security reasons.</p>
+
+<p>**most_recent **(boolean) — Selects the newest created image when true. This is most useful for selecting a daily distro build.</p>
+
+<p>You may set this in place of source_ami or in conjunction with it. If you set this in conjunction with source_ami, the source_ami will be added to the filter. The provided source_ami must meet all of the filtering criteria provided in source_ami_filter; this pins the AMI returned by the filter, but will cause Packer to fail if the source_ami does not exist.</p>
+
+<p>These are basic configuration criteria required for a basic image creation. You can find the detailed options which we can specify by going through particular builder configuration</p>
+
+<p>The above shown are the configuration options which we can use for — **Amazon EBS instance <a href="https://www.packer.io/docs/builders/amazon-ebs.html">**https://www.packer.io/docs/builders/amazon-ebs.html</a></p>
+
+<p><strong>Azure</strong> requires some additional setup for creating ARM images will detail in further documentation</p>
+
+<p><a href="https://www.packer.io/docs/builders/azure-setup.html">https://www.packer.io/docs/builders/azure-setup.html</a></p>
+
+<h2 id="what-are-provisioners">What are Provisioners?</h2>
+
+<p>Provisioners use builtin and third-party software to install and configure the machine image after booting. Provisioners prepare the system for use, so common use cases for provisioners include:</p>
+
+<ul>
+  <li>
+    <p>Installing packages</p>
+  </li>
+  <li>
+    <p>Patching the kernel</p>
+  </li>
+  <li>
+    <p>Creating users</p>
+  </li>
+  <li>
+    <p>Downloading application code</p>
+  </li>
+</ul>
+
+<p>Packer has support for huge set provisioners which we can use,</p>
+
+<p><a href="https://www.packer.io/docs/provisioners/ansible-local.html">Ansible Local</a>, <a href="https://www.packer.io/docs/provisioners/ansible.html">Ansible (Remote)</a>, <a href="https://www.packer.io/docs/provisioners/breakpoint.html">Breakpoint</a>, <a href="https://www.packer.io/docs/provisioners/chef-client.html">Chef Client</a>, <a href="https://www.packer.io/docs/provisioners/chef-solo.html">Chef Solo</a>, <a href="https://www.packer.io/docs/provisioners/converge.html">Converge</a>, <a href="https://www.packer.io/docs/provisioners/file.html">File</a>, <a href="https://www.packer.io/docs/provisioners/inspec.html">InSpec</a>, <a href="https://www.packer.io/docs/provisioners/powershell.html">PowerShell</a> ,<a href="https://www.packer.io/docs/provisioners/puppet-masterless.html">Puppet Masterless</a>, <a href="https://www.packer.io/docs/provisioners/puppet-server.html">Puppet Server</a>, <a href="https://www.packer.io/docs/provisioners/salt-masterless.html">Salt Masterless</a>, <a href="https://www.packer.io/docs/provisioners/shell.html">Shell</a>, <a href="https://www.packer.io/docs/provisioners/shell-local.html">Shell (Local)</a>, <a href="https://www.packer.io/docs/provisioners/windows-shell.html">Windows Shell</a>, <a href="https://www.packer.io/docs/provisioners/windows-restart.html">Windows Restart</a>, <a href="https://www.packer.io/docs/provisioners/custom.html">Custom</a></p>
+
+<p>Each provisioner will have set of options required to be set in order for them to work.</p>
+
+<p><strong>Let’s Have Look at File Provisioner for Example</strong></p>
+
+<p>The file Packer provisioner uploads files to machines built by Packer. The recommended usage of the file provisioner is to use it to upload files, and then use <a href="https://www.packer.io/docs/provisioners/shell.html">shell provisioner</a> to move them to the proper place, set permissions, etc.</p>
+
+<p><strong>NOTE</strong>: You can only upload files to locations that the provisioning user (generally not root) has permission to access. Creating files in /tmp and using a shell provisioner to move them into the final location is the only way to upload files to root owned locations.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "type": "file",
+  "source": "app.tar.gz",
+  "destination": "/tmp/app.tar.gz"
+}
+</code></pre></div></div>
+
+<h2 id="what-are-post-processors">What are Post-Processors?</h2>
+
+<p>Post-processors run after the image is built by the builder and provisioned by the provisioner(s). Post-processors are optional, and they can be used to upload artifacts, re-package, or more. For more information about post-processors, please choose an option from the sidebar.</p>
+
+<h2 id="running-packer-build">­­­Running Packer Build</h2>
+
+<p>To build image use below commandm</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>packer build example.json
+</code></pre></div></div>
+
+<p>Available commands are:</p>
+
+<ul>
+  <li>
+    <p><strong>build:</strong> build image(s) from template</p>
+  </li>
+  <li>
+    <p><strong>console:</strong> check that a template is valid</p>
+  </li>
+  <li>
+    <p><strong>fix:</strong> fixes templates from old versions of packer</p>
+  </li>
+  <li>
+    <p><strong>inspect:</strong> see components of a template</p>
+  </li>
+  <li>
+    <p><strong>validate:</strong> check that a template is valid</p>
+  </li>
+  <li>
+    <p><strong>version:</strong> Prints the Packer version</p>
+  </li>
+</ul>
+
+<h2 id="a-complete-packer-template-example">A Complete Packer Template Example</h2>
+
+<p>We have looked into all the major packer terminlogies and how to use them. Let’s now create a new template, which involves all that we learned and try it out:</p>
+
+<p><strong>A sample ready to go template example for AMI Ubuntu with MySQL</strong></p>
+
+<p>This example combines variables, provisioners and builders in a single file. The below template is tested with AWS EC2.</p>
+
+<script src="https://gist.github.com/itsLucario/fc66af41ba4d8eb9da30f3337f8b23f5.js"></script>
+
+<p>As you can see in the above template JSON. we are using a shell provisioner which executes the mysql.sh script. Let’s create the shell script for mysql installation.</p>
+
+<script src="https://gist.github.com/itsLucario/b63c233160ecd30e9d610a6fe184e9ca.js"></script>
+
+<p>Now we have everything ready. Let’s do the build with template that we created above.</p>
+
+<p>Run the below command to build an AWS native AMI image: (In the below command path is wrt the <a href="https://github.com/itsLucario/packer-casic-example">github example</a>)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>packer build ./templates/ubuntu-mysql.json
+</code></pre></div></div>
+
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*lymHwXrJ4WxHwiffG60O-A.png" alt="packer build output" /></p>
+
+<p>Once the build gets successful, an AMI will get created in the specified region in our case its us-east-1 . You can login to your AWS Console, Open the Amazon EC2 console at <a href="https://console.aws.amazon.com/ec2/">https://console.aws.amazon.com/ec2/</a> and In the navigation pane, choose <strong>AMIs</strong>.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2938/1*dHdAAfNRL8xGXp6EdZ-zOg.png" alt="" /></p>
+
+<p>You can see in the above image an AMI got created which matches with the AMI ID show in our terminal. You can use the image to create an instance right away.</p>
+
+<p>Take a look at the working example on my GitHub. Feel free to leave a comment and don’t forget to leave claps and follow me if you find this helpful.</p>
+
+<p>GitHub Coding Example
+<a href="https://github.com/itsLucario/packer-basic-example">itsLucario/packer-basic-example</a></p>
+:ET
