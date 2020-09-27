@@ -59,6 +59,16 @@ html {
 @-ms-viewport {
   width: device-width; }
 
+.twitter {
+  color: royalblue;
+}
+.linkedin {
+  color: #0a66c2;
+}
+.email {
+  color: gray;
+}
+
 article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
   display: block; }
 

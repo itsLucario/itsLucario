@@ -19,10 +19,10 @@ plugins:
   - jekyll-seo-tag
   
 authors:
-    nanda:
+    nandan:
       name:           Nandan BN
       site:           https://nandan.dev
-      avatar:         /assets/images/avatar1.jpg
+      avatar:         /assets/images/nandan_avatar.png
       bio:            "Hi, I am Nandan"
       email:          its.nandanbn@gmail.com
       twitter:        https://twitter.com/ItsNandanDev
@@ -35,7 +35,7 @@ defaults:
     values:
       layout: post
       author: nandan
-      avatar: /assets/images/avatar1.jpg
+      avatar: /assets/images/nandan.png
       
   # all pages
   - scope:

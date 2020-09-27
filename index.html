@@ -1,38 +1,59 @@
 ---
-title: "Mundana Free Jekyll Theme"
+title: "Tech Articles, Projects"
 layout: default
 pagination:
 enabled: true
-description: "A great Jekyll theme developed by Sal @wowthemesnet."
+description: "Software developer who writes tech articles, creates projects and coding samples which helps for easy understand and development."
 ---
 <div class="container">
     {% if page.url == "/" %}
-    <div class="row remove-site-content-margin">
-
+    <div class="m-3 row">
+        <div class="col-md-3">
+            <img class="rounded-circle" src="/assets/images/nandan.png" alt="Nandan BN" width="250" />
+        </div>
+        <div class="col-md-9">
+            <div class="mt-2 mb-3">
+                <span class="h2 text-muted">Hi there!, I'm </span> <span class="h1 font-weight-bold">Nandan</span>
+            </div>
+            <div>Software Developer <i class="fas fa-desktop text-secondary"></i> , fervid towards latest technologies.
+            </div>
+            <div>
+                I Love <i class="fas fa-heart text-danger"></i> contributing to Open Source and to help community with
+                my experiences.
+            </div>
+            <div class="mt-3 social-icon">
+                <a href="https://github.com/itsLucario" target="_blank"><i
+                        class="fab fa-github-square fa-2x p-2 text-dark"></i></a>
+                <a href="https://www.linkedin.com/in/nandan-bn/" target="_blank"><i
+                        class="fab fa-linkedin fa-2x p-2 linkedin"></i></a>
+                <a href="https://twitter.com/ItsNandanDev" target="_blank"><i
+                        class="fab fa-twitter fa-2x p-2 twitter"></i></a>
+                <a href="mailto:its.nandanbn@gmail.com" target="_blank"><i
+                        class="fas fa-envelope-square fa-2x p-2 email"></i></a>
+            </div>
+        </div>
     </div>
     <!-- Sticky - add sticky tag to the post you want to highlight here - tags: [sticky] -->
     <div class="row">
         <div class="col-md-8">
-            {% for post in site.posts %}
-            {% if post.tags contains "home-sticky" %}
             <div class="jumbotron jumbotron-fluid jumbotron-home pt-0 pb-0 mt-3 mb-2rem bg-lightblue position-relative">
                 <div class="pl-4 pr-0 h-100 tofront">
                     <div class="row justify-content-between">
                         <div class="col-md-6 pt-6 pb-6 pr-lg-4 align-self-center">
-                            <h1 class="mb-3">{{post.title}}</h1>
+                            <h1 class="mb-3">Checkout my projects</h1>
                             <p class="mb-3 lead">
-                                {{ post.excerpt | strip_html | strip_newlines | truncate: 136 }}
+                                I love working on various languages and learning new stuff everyday. Currently I'm
+                                working on Ionic, NodeJS & Spring Boot. Interested to see my previous works? Click
+                                below.
                             </p>
-                            <a href="{{post.url}}" class="btn btn-dark">Read More</a>
+                            <a href="/projects" class="btn btn-dark">See Projects</a>
                         </div>
                         <div class="col-md-6 d-none d-md-block pr-0"
-                            style="background-size:cover;background-image:url({{ post.image }});">
+                            style="background-size:cover;background-image:url(/assets/images/work.jpg);">
                         </div>
                     </div>
                 </div>
             </div>
-            {% endif %}
-            {% endfor %}
         </div>
         <div class="col-md-4">
             {% include sidebar-featured.html %}
