@@ -45,7 +45,6 @@ defaults:
       
 # Syntax
 markdown: kramdown
-highlighter: rouge
 
 # Paginate
 paginate: 10
