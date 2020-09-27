@@ -1,0 +1,276 @@
+I"b<p>To “listen” to an event, we can always write the “listener” to an event as another method within the source of the event, but this will tightly couple the event source to the logic of the listener.</p>
+
+<p>With real events, we are more flexible than with direct method calls. We can dynamically register and deregister listeners to certain events as we wish. We can also have multiple listeners for the same event.</p>
+
+<p>This tutorial gives an overview of how to publish and listen to custom events and explains Spring Boot’s built-in events.</p>
+
+<h2 id="why-should-i-use-events-instead-of-direct-method-calls">Why Should I Use Events Instead of Direct Method Calls?</h2>
+
+<p>Both, events and direct method calls, fit for different situations. With a method call it’s like making an assertion that - no matter the state of the sending and receiving modules - they need to know this event happened.</p>
+
+<p>With events, on the other hand, we just say that an event occurred and which modules are notified about it is not our concern. It’s good to use events when we want to pass on the processing to another thread (example: sending an email on some task completion). Also, events come in handy for test-driven development.</p>
+
+<h2 id="what-is-an-application-event">What is an Application Event?</h2>
+
+<p>Spring application events allow us to throw and listen to specific application events that we can process as we wish. Events are meant for exchanging information between loosely coupled components. As there is no direct coupling between publishers and subscribers, it enables us to modify subscribers without affecting the publishers and vice-versa.</p>
+
+<p>Let’s see how we can create, publish and listen to custom events in a Spring Boot application.</p>
+
+<h2 id="creating-an-applicationevent">Creating an <code class="language-plaintext highlighter-rouge">ApplicationEvent</code></h2>
+
+<p>We can publish application events using the Spring Framework’s event publishing mechanism.</p>
+
+<p>Let’s create a custom event called <code class="language-plaintext highlighter-rouge">UserCreatedEvent</code> by extending <code class="language-plaintext highlighter-rouge">ApplicationEvent</code>:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">UserCreatedEvent</span> <span class="kd">extends</span> <span class="nc">ApplicationEvent</span> <span class="o">{</span>
+  <span class="kd">private</span> <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+
+  <span class="nc">UserCreatedEvent</span><span class="o">(</span><span class="nc">Object</span> <span class="n">source</span><span class="o">,</span> <span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">source</span><span class="o">);</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+  <span class="o">}</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">source</code> which is being passed to <code class="language-plaintext highlighter-rouge">super()</code> should be the object on which the event occurred initially or an object with which the event is associated.</p>
+
+<p>Since Spring 4.2, <strong>we can also publish objects as an event without extending <code class="language-plaintext highlighter-rouge">ApplicationEvent</code></strong>:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">UserRemovedEvent</span> <span class="o">{</span>
+  <span class="kd">private</span> <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+
+  <span class="nc">UserRemovedEvent</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+  <span class="o">}</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="publishing-an-applicationevent">Publishing an <code class="language-plaintext highlighter-rouge">ApplicationEvent</code></h2>
+
+<p>We use the <code class="language-plaintext highlighter-rouge">ApplicationEventPublisher</code> interface to publish our events:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">Publisher</span> <span class="o">{</span>
+  
+  <span class="kd">private</span> <span class="kd">final</span> <span class="nc">ApplicationEventPublisher</span> <span class="n">publisher</span><span class="o">;</span>
+    
+    <span class="nc">Publisher</span><span class="o">(</span><span class="nc">ApplicationEventPublisher</span> <span class="n">publisher</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">this</span><span class="o">.</span><span class="na">publisher</span> <span class="o">=</span> <span class="n">publisher</span><span class="o">;</span>
+    <span class="o">}</span>
+
+  <span class="kt">void</span> <span class="nf">publishEvent</span><span class="o">(</span><span class="kd">final</span> <span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// Publishing event created by extending ApplicationEvent</span>
+    <span class="n">publisher</span><span class="o">.</span><span class="na">publishEvent</span><span class="o">(</span><span class="k">new</span> <span class="nc">UserCreatedEvent</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">name</span><span class="o">));</span>
+    <span class="c1">// Publishing an object as an event</span>
+    <span class="n">publisher</span><span class="o">.</span><span class="na">publishEvent</span><span class="o">(</span><span class="k">new</span> <span class="nc">UserRemovedEvent</span><span class="o">(</span><span class="n">name</span><span class="o">));</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>When the object we’re publishing is not an <code class="language-plaintext highlighter-rouge">ApplicationEvent</code>, Spring will automatically wrap it in a <code class="language-plaintext highlighter-rouge">PayloadApplicationEvent</code> for us.</p>
+
+<h2 id="listening-to-an-application-event">Listening to an Application Event</h2>
+
+<p>Now that we know how to create and publish a custom event, let’s see how we can listen to the event. An event can have multiple listeners doing different work based on application requirements.</p>
+
+<p>There are two ways to define a listener. We can either use the <code class="language-plaintext highlighter-rouge">@EventListener</code> annotation or implement the <code class="language-plaintext highlighter-rouge">ApplicationListener</code> interface. In either case, the listener class has to be managed by Spring.</p>
+
+<h3 id="annotation-driven">Annotation-Driven</h3>
+
+<p>Starting with Spring 4.1 it’s now possible to simply annotate a method of a managed bean with <code class="language-plaintext highlighter-rouge">@EventListener</code> to automatically register an <code class="language-plaintext highlighter-rouge">ApplicationListener</code> matching the signature of the method:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">UserRemovedListener</span> <span class="o">{</span>
+
+  <span class="nd">@EventListener</span>
+  <span class="nc">ReturnedEvent</span> <span class="nf">handleUserRemovedEvent</span><span class="o">(</span><span class="nc">UserRemovedEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// handle UserRemovedEvent ...</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">ReturnedEvent</span><span class="o">();</span>
+  <span class="o">}</span>
+
+  <span class="nd">@EventListener</span>
+  <span class="kt">void</span> <span class="nf">handleReturnedEvent</span><span class="o">(</span><span class="nc">ReturnedEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// handle ReturnedEvent ...</span>
+  <span class="o">}</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>No additional configuration is necessary with annotation-driven configuration enabled. Our method can listen to several events or if we want to define it with no parameter at all, the event types can also be specified on the annotation itself. Example: <code class="language-plaintext highlighter-rouge">@EventListener({ContextStartedEvent.class, ContextRefreshedEvent.class})</code>.</p>
+
+<p>For the methods annotated with <code class="language-plaintext highlighter-rouge">@EventListener</code> and defined as a non-void return type, Spring will publish the result as a new event for us. In the above example, the <code class="language-plaintext highlighter-rouge">ReturnedEvent</code> returned by the first method will be published and then handled by the second method.</p>
+
+<p>Spring allows our listener to be triggered only in certain circumstances if we specify a SpEL <code class="language-plaintext highlighter-rouge">condition</code>:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">UserRemovedListener</span> <span class="o">{</span>
+
+  <span class="nd">@EventListener</span><span class="o">(</span><span class="n">condition</span> <span class="o">=</span> <span class="s">"#event.name eq 'reflectoring'"</span><span class="o">)</span>
+  <span class="kt">void</span> <span class="nf">handleConditionalListener</span><span class="o">(</span><span class="nc">UserRemovedEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// handle UserRemovedEvent</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The event will only be handled if the expression evaluates to <code class="language-plaintext highlighter-rouge">true</code> or one of the following strings: “true”, “on”, “yes”, or “1”. Method arguments are exposed via their names. The condition expression also exposes a “root” variable referring to the raw <code class="language-plaintext highlighter-rouge">ApplicationEvent</code> (<code class="language-plaintext highlighter-rouge">#root.event</code>) and the actual method arguments <code class="language-plaintext highlighter-rouge">(#root.args)</code></p>
+
+<p>In the above example, the listener will be triggered with <code class="language-plaintext highlighter-rouge">UserRemovedEvent</code> only when the <code class="language-plaintext highlighter-rouge">#event.name</code> has the value <code class="language-plaintext highlighter-rouge">'reflectoring'</code>,</p>
+
+<h3 id="implementing-applicationlistener">Implementing <code class="language-plaintext highlighter-rouge">ApplicationListener</code></h3>
+
+<p>Another way to listen to an event is to implement the <code class="language-plaintext highlighter-rouge">ApplicationListener</code> interface:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">UserCreatedListener</span> <span class="kd">implements</span> <span class="nc">ApplicationListener</span><span class="o">&lt;</span><span class="nc">UserCreatedEvent</span><span class="o">&gt;</span> <span class="o">{</span>
+
+  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onApplicationEvent</span><span class="o">(</span><span class="nc">UserCreatedEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// handle UserCreatedEvent</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>As long as the listener object is registered in the Spring application context, it will receive events. When Spring routes an event, it uses the signature of our listener to determine if it matches an event or not.</p>
+
+<h3 id="asynchronous-event-listeners">Asynchronous Event Listeners</h3>
+
+<p><strong>By default spring events are synchronous, meaning the publisher thread blocks until all listeners have finished processing the event.</strong></p>
+
+<p>To make an event listener run in async mode, all we have to do is use the <code class="language-plaintext highlighter-rouge">@Async</code> annotation on that listener:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">AsyncListener</span> <span class="o">{</span>
+
+  <span class="nd">@Async</span>
+  <span class="nd">@EventListener</span>
+  <span class="kt">void</span> <span class="nf">handleAsyncEvent</span><span class="o">(</span><span class="nc">String</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// handle event</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>To make the <code class="language-plaintext highlighter-rouge">@Async</code> annotation work, we also have to annotate one of our <code class="language-plaintext highlighter-rouge">@Configuration</code> classes or the <code class="language-plaintext highlighter-rouge">@SpringBootApplication</code> class with <code class="language-plaintext highlighter-rouge">@EnableAsync</code>.</p>
+
+<p>The above code example also shows that we can use <code class="language-plaintext highlighter-rouge">String</code>s as events. Use at your own risk. <strong>It’s better to use data types specific for our use case so as not to conflict with other events</strong>.</p>
+
+<h2 id="transaction-bound-events">Transaction-Bound Events</h2>
+
+<p>Spring allows us to bind an event listener to a phase of the current transaction. This allows events to be used with more flexibility when the outcome of the current transaction matters to the listener.</p>
+
+<p>When we annotate our method with <code class="language-plaintext highlighter-rouge">@TransactionalEventListener</code>, we get an extended event listener that is aware of the transaction:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">UserRemovedListener</span> <span class="o">{</span>
+
+  <span class="nd">@TransactionalEventListener</span><span class="o">(</span><span class="n">phase</span><span class="o">=</span><span class="nc">TransactionPhase</span><span class="o">.</span><span class="na">AFTER_COMPLETION</span><span class="o">)</span>
+  <span class="kt">void</span> <span class="nf">handleAfterUserRemoved</span><span class="o">(</span><span class="nc">UserRemovedEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// handle UserRemovedEvent</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">UserRemovedListener</code> will only be invoked when the current transaction completes.</p>
+
+<p>We can bind the listener to the following phases of the transaction:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">AFTER_COMMIT</code>: The event will be handled when the transaction gets committed successfully. We can use this if our event listener should only run if the current transaction was successful.</li>
+  <li><code class="language-plaintext highlighter-rouge">AFTER_COMPLETION</code>: The event will be handled when the transaction commits or is rolled back. We can use this to perform cleanup after transaction completion, for example.</li>
+  <li><code class="language-plaintext highlighter-rouge">AFTER_ROLLBACK</code>: The event will be handled after the transaction has rolled back.</li>
+  <li><code class="language-plaintext highlighter-rouge">BEFORE_COMMIT</code>: The event will be handled before the transaction commit. We can use this to flush transactional O/R mapping sessions to the database, for example.</li>
+</ul>
+
+<h2 id="spring-boots-application-events">Spring Boot’s Application Events</h2>
+
+<p>Spring Boot provides several predefined <code class="language-plaintext highlighter-rouge">ApplicationEvent</code>s that are tied to the lifecycle of a <code class="language-plaintext highlighter-rouge">SpringApplication</code>.</p>
+
+<p><strong>Some events are triggered before the <code class="language-plaintext highlighter-rouge">ApplicationContext</code> is created</strong>, so we cannot register a listener on those as a <code class="language-plaintext highlighter-rouge">@Bean</code>. We can register listeners for these events by adding the listener manually:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@SpringBootApplication</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">EventsDemoApplication</span> <span class="o">{</span>
+
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">SpringApplication</span> <span class="n">springApplication</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">SpringApplication</span><span class="o">(</span><span class="nc">EventsDemoApplication</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+    <span class="n">springApplication</span><span class="o">.</span><span class="na">addListeners</span><span class="o">(</span><span class="k">new</span> <span class="nc">SpringBuiltInEventsListener</span><span class="o">());</span>
+    <span class="n">springApplication</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="n">args</span><span class="o">);</span>
+  <span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>We can also register our listeners regardless of how the application is created by adding a <code class="language-plaintext highlighter-rouge">META-INF/spring.factories</code> file to our project and reference our listener(s) by using the <code class="language-plaintext highlighter-rouge">org.springframework.context.ApplicationListener</code> key:</p>
+
+<p><code class="language-plaintext highlighter-rouge">org.springframework.context.ApplicationListener=
+    com.reflectoring.eventdemo.SpringBuiltInEventsListener</code></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">SpringBuiltInEventsListener</span> 
+    <span class="kd">implements</span> <span class="nc">ApplicationListener</span><span class="o">&lt;</span><span class="nc">SpringApplicationEvent</span><span class="o">&gt;{</span>
+
+  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onApplicationEvent</span><span class="o">(</span><span class="nc">SpringApplicationEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// handle event</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Once we make sure that our event listener is registered properly, we can listen to all of Spring Boot’s <code class="language-plaintext highlighter-rouge">SpringApplicationEvents</code>. Let’s have a look at them, <strong>in the order of their execution during application startup</strong>.</p>
+
+<h3 id="applicationstartingevent">ApplicationStartingEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationStartingEvent</code> is fired at the start of a run but before any processing, except for the registration of listeners and initializers.</p>
+
+<h3 id="applicationenvironmentpreparedevent">ApplicationEnvironmentPreparedEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationEnvironmentPreparedEvent</code> is fired when the <code class="language-plaintext highlighter-rouge">Environment</code> to be used in the context is available.</p>
+
+<p><strong>Since the <code class="language-plaintext highlighter-rouge">Environment</code> will be ready at this point, we can inspect and do modify it before it’s used by other beans</strong>.</p>
+
+<h3 id="applicationcontextinitializedevent">ApplicationContextInitializedEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationContextInitializedEvent</code> is fired when the <code class="language-plaintext highlighter-rouge">ApplicationContext</code> is ready and <code class="language-plaintext highlighter-rouge">ApplicationContextInitializers</code> are called but bean definitions are not yet loaded.</p>
+
+<p>We can use this to perform a task <strong>before beans are initialized into Spring container</strong>.</p>
+
+<h3 id="applicationpreparedevent">ApplicationPreparedEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationPreparedEvent</code> is fired when <code class="language-plaintext highlighter-rouge">ApllicationContext</code> is prepared but not refreshed.</p>
+
+<p><strong>The <code class="language-plaintext highlighter-rouge">Environment</code> is ready for use and bean definitions will be loaded</strong>.</p>
+
+<h3 id="contextrefreshedevent">ContextRefreshedEvent</h3>
+
+<p>A <code class="language-plaintext highlighter-rouge">ContextRefreshedEvent</code> is fired when an <code class="language-plaintext highlighter-rouge">ApplicationContext</code> is refreshed.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">ContextRefreshedEvent</code> comes from Spring directly and not from Spring Boot and does not extend <code class="language-plaintext highlighter-rouge">SpringApplicationEvent</code>.</p>
+
+<h3 id="webserverinitializedevent">WebServerInitializedEvent</h3>
+
+<p>If we’re using a web server, a <code class="language-plaintext highlighter-rouge">WebServerInitializedEvent</code> is fired after the web server is ready. <code class="language-plaintext highlighter-rouge">ServletWebServerInitializedEvent</code> and <code class="language-plaintext highlighter-rouge">ReactiveWebServerInitializedEvent</code> are the servlet and reactive variants, respectively.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">WebServerInitializedEvent</code> does not extend <code class="language-plaintext highlighter-rouge">SpringApplicationEvent</code>.</p>
+
+<h3 id="applicationstartedevent">ApplicationStartedEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationStartedEvent</code> is fired after the context has been refreshed but before any application and command-line runners have been called.</p>
+
+<h3 id="applicationreadyevent">ApplicationReadyEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationReadyEvent</code> is fired to indicate that the application is ready to service requests.</p>
+
+<p><strong>It is advised not to modify the internal state at this point since all initialization steps will be completed.</strong></p>
+
+<h3 id="applicationfailedevent">ApplicationFailedEvent</h3>
+
+<p>An <code class="language-plaintext highlighter-rouge">ApplicationFailedEvent</code> is fired if there is an exception and the application fails to start. This can happen at any time during startup.</p>
+
+<p><strong>We can use this to perform some tasks like execute a script or notify on startup failure</strong>.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Events are designed for simple communication among Spring beans within the same application context. As of Spring 4.2, the infrastructure has been significantly improved and offers an annotation-based model as well as the ability to publish any arbitrary event.</p>
+
+<p>You can find the example code <a href="https://github.com/thombergs/code-examples/tree/master/spring-boot/spring-events">on GitHub</a>.</p>
+:ET

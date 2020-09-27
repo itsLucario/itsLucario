@@ -14,16 +14,14 @@ description: "Technology articles and tutorials along with working github exampl
         {% assign latest_post = site.posts[0] %}
         <div class="col-md-6">
             <div class="card border-0 mb-4 box-shadow">
-                <a href="{% if latest_post.link %}{{latest_post.link}}{% else %}{{latest_post.url}}{% endif %}"
-                    target="{% if latest_post.link %}_blank{% else %}_self{% endif %}">
+                <a href="{{latest_post.url}}">
                     <div class="topfirstimage"
                         style="background-image: url({{ latest_post.image }}); height: 200px;    background-size: cover;    background-repeat: no-repeat;">
                     </div>
                 </a>
                 <div class="card-body px-0 pb-0 d-flex flex-column align-items-start">
                     <h2 class="h4 font-weight-bold">
-                        <a class="text-dark"
-                            href="{% if latest_post.link %}{{latest_post.link}}{% else %}{{latest_post.url}}{% endif %}"
+                        <a class="text-dark" href="{{latest_post.url}}"
                             target="{% if latest_post.link %}_blank{% else %}_self{% endif %}">{{ latest_post.title }}</a>
                     </h2>
                     <p class="excerpt">
@@ -53,17 +51,14 @@ description: "Technology articles and tutorials along with working github exampl
             <div class="mb-3 d-flex align-items-center">
                 {% if second_post.image %}
                 <div class="col-md-4">
-                    <a href="{% if second_post.link %}{{second_post.link}}{% else %}{{second_post.url}}{% endif %}"
-                        target="{% if second_post.link %}_blank{% else %}_self{% endif %}">
+                    <a href="{{second_post.url}}">
                         <img class="w-100" src="{{ second_post.image }}" alt="{{ second_post.title }}">
                     </a>
                 </div>
                 {% endif %}
                 <div>
                     <h2 class="mb-2 h6 font-weight-bold">
-                        <a class="text-dark"
-                            href="{% if second_post.link %}{{second_post.link}}{% else %}{{second_post.url}}{% endif %}"
-                            target="{% if second_post.link %}_blank{% else %}_self{% endif %}">{{ second_post.title }}</a>
+                        <a class="text-dark" href="{{second_post.url}}">{{ second_post.title }}</a>
                     </h2>
                     <small class="d-block text-muted">
                         In <span class="catlist">
@@ -85,17 +80,14 @@ description: "Technology articles and tutorials along with working github exampl
             <div class="mb-3 d-flex align-items-center">
                 {% if third_post.image %}
                 <div class="col-md-4">
-                    <a href="{% if third_post.link %}{{third_post.link}}{% else %}{{third_post.url}}{% endif %}"
-                        target="{% if third_post.link %}_blank{% else %}_self{% endif %}">
+                    <a href="{{third_post.url}}">
                         <img class="w-100" src="{{ third_post.image }}" alt="{{ third_post.title }}">
                     </a>
                 </div>
                 {% endif %}
                 <div>
                     <h2 class="mb-2 h6 font-weight-bold">
-                        <a class="text-dark"
-                            href="{% if third_post.link %}{{third_post.link}}{% else %}{{third_post.url}}{% endif %}"
-                            target="{% if third_post.link %}_blank{% else %}_self{% endif %}">{{ third_post.title }}</a>
+                        <a class="text-dark" href="{{third_post.url}}">{{ third_post.title }}</a>
                     </h2>
                     <small class="d-block text-muted">
                         In <span class="catlist">
@@ -117,17 +109,14 @@ description: "Technology articles and tutorials along with working github exampl
             <div class="mb-3 d-flex align-items-center">
                 {% if fourth_post.image %}
                 <div class="col-md-4">
-                    <a href="{% if fourth_post.link %}{{fourth_post.link}}{% else %}{{fourth_post.url}}{% endif %}"
-                        target="{% if fourth_post.link %}_blank{% else %}_self{% endif %}">
+                    <a href="{{fourth_post.url}}">
                         <img class="w-100" src="{{ fourth_post.image }}" alt="{{ fourth_post.title }}">
                     </a>
                 </div>
                 {% endif %}
                 <div>
                     <h2 class="mb-2 h6 font-weight-bold">
-                        <a class="text-dark"
-                            href="{% if fourth_post.link %}{{fourth_post.link}}{% else %}{{fourth_post.url}}{% endif %}"
-                            target="{% if fourth_post.link %}_blank{% else %}_self{% endif %}">{{ fourth_post.title }}</a>
+                        <a class="text-dark" href="{{fourth_post.url}}">{{ fourth_post.title }}</a>
                     </h2>
                     <small class="d-block text-muted">
                         In <span class="catlist">
@@ -157,8 +146,7 @@ description: "Technology articles and tutorials along with working github exampl
                     <p class="mb-3 lead">
                         {{ post.excerpt | strip_html | strip_newlines | truncate: 136 }}
                     </p>
-                    <a href="{% if post.link %}{{post.link}}{% else %}{{post.url}}{% endif %}"
-                        target="{% if post.link %}_blank{% else %}_self{% endif %}" class="btn btn-dark">
+                    <a href="{{post.url}}" class="btn btn-dark">
                         Read More</a>
                 </div>
                 <div class="col-md-6 d-none d-md-block pr-0"

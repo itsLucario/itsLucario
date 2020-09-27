@@ -1,6 +1,4 @@
-I"º<p>Ionic v5 BrowserTab with Custom Tab Color</p>
-
-<p>BrowserTab plugin provides an interface to in-app browser tabs that exist on some mobile platforms, specifically Custom Tabs on Android (including the Chrome Custom Tabs implementation), and SFSafariViewController on iOS.</p>
+I"ˆ<p>BrowserTab plugin provides an interface to in-app browser tabs that exist on some mobile platforms, specifically Custom Tabs on Android (including the Chrome Custom Tabs implementation), and SFSafariViewController on iOS.</p>
 
 <p>The plugin weâ€™ll be looking at today is a fork from the official <a href="https://github.com/google/cordova-plugin-browsertab">google/cordova-plugin-browsertab</a>. Since there are no active maintainers of the repository, developers are facing many issues with the plugin.</p>
 

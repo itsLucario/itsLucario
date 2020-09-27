@@ -1,14 +1,12 @@
 ---
 layout: post
-title: "Spring Boot Application Events Explained"
+title: "Ionic v5 BrowserTab with Custom Tab Color"
 author: nandan
 categories: [ionic, cordova]
 excerpt: "BrowserTab plugin provides an interface to in-app browser tabs that exist on some mobile platforms, specifically Custom Tabs on Android (including the Chrome Custom Tabs implementation), and SFSafariViewController on iOS."
 image: https://miro.medium.com/max/700/1*3A6oECCPwIOUxp1mfbZR9Q.jpeg
 tags: [ionic, cordova, angular, featured]
 ---
-
-Ionic v5 BrowserTab with Custom Tab Color
 
 BrowserTab plugin provides an interface to in-app browser tabs that exist on some mobile platforms, specifically Custom Tabs on Android (including the Chrome Custom Tabs implementation), and SFSafariViewController on iOS.
 

@@ -1,0 +1,263 @@
+I"�^<p>In this article, we’ll look at Spring component scanning and how to use it. We’ll be using a Spring Boot application for all our examples throughout this article.</p>
+
+<h2 id="what-is-component-scanning">What is Component Scanning?</h2>
+
+<p>To do dependency injection, Spring creates a so-called application context.</p>
+
+<p>During startup, Spring instantiates objects and adds them to the application context. Objects in the application context are called “Spring beans” or “components”.</p>
+
+<p>Spring resolves dependencies between Spring beans and injects Spring beans into other Spring beans’ fields or constructors.</p>
+
+<p><strong>The process of searching the classpath for classes that should contribute to the application context is called component scanning.</strong></p>
+
+<h2 id="stereotype-annotations">Stereotype Annotations</h2>
+
+<p>If Spring finds a class annotated with one of several annotations, it will consider this class as a candidate for a Spring bean to be added to the application context during component scanning.</p>
+
+<p>Spring components are mainly made up of four types.</p>
+
+<h3 id="component"><code class="language-plaintext highlighter-rouge">@Component</code></h3>
+
+<p>This is a generic stereotype annotation used indicates that the class is a Spring-managed component. Other stereotypes are a specialization of <code class="language-plaintext highlighter-rouge">@Component</code>.</p>
+
+<h3 id="controller"><code class="language-plaintext highlighter-rouge">@Controller</code></h3>
+
+<p>This indicates that the annotated class is a Spring-managed controller that provides methods annotated with <code class="language-plaintext highlighter-rouge">@RequestMapping</code> to answer web requests.</p>
+
+<p>Spring 4.0 introduced the <code class="language-plaintext highlighter-rouge">@RestController</code> annotation which combines both <code class="language-plaintext highlighter-rouge">@Controller</code> and <code class="language-plaintext highlighter-rouge">@ResponseBody</code> and makes it easy to create RESTful services that return JSON objects.</p>
+
+<h3 id="service"><code class="language-plaintext highlighter-rouge">@Service</code></h3>
+
+<p>We can use the <code class="language-plaintext highlighter-rouge">@Service</code> stereotype for classes that contain business logic or classes which come in the service layer.</p>
+
+<h3 id="repository"><code class="language-plaintext highlighter-rouge">@Repository</code></h3>
+
+<p>We can use the <code class="language-plaintext highlighter-rouge">@Repository</code> stereotype for DAO classes which are responsible for providing access to database entities.</p>
+
+<p>If we are using Spring Data for managing database operations, then we should use the Spring Data Repository interface instead of building our own <code class="language-plaintext highlighter-rouge">@Repository</code>-annotated classes.</p>
+
+<h2 id="when-to-use-component-scanning">When to Use Component Scanning</h2>
+
+<p>Spring provides a mechanism to identify Spring bean candidates explicitly through the <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation.</p>
+
+<p>If the application is a Spring Boot application, then all the packages under the package containing the Spring Boot application class will be covered by an implicit component scan.</p>
+
+<p>Spring Boot’s <code class="language-plaintext highlighter-rouge">@SpringBootApplication</code> annotation implies the <code class="language-plaintext highlighter-rouge">@Configuration</code>, <code class="language-plaintext highlighter-rouge">@ComponentScan</code>, and <code class="language-plaintext highlighter-rouge">@EnableAutoConfiguration</code> annotations.</p>
+
+<p>By default, the <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation will scan for components in the current package and all its sub-packages. So if your application doesn’t have a varying package structure then there is no need for explicit component scanning.</p>
+
+<p><strong>Specifying a <code class="language-plaintext highlighter-rouge">@Configuration</code>-annotated class in the default package will tell Spring to scan all the classes in all the JARS in the classpath. Don’t do that!</strong></p>
+
+<h2 id="how-to-use-componentscan">How to Use <code class="language-plaintext highlighter-rouge">@ComponentScan</code></h2>
+
+<p>We use the <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation along with the <code class="language-plaintext highlighter-rouge">@Configuration</code> annotation to tell Spring to scan classes that are annotated with any stereotype annotation. The <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation provides different attributes that we can modify to get desired scanning behavior.</p>
+
+<p>We’ll be using <code class="language-plaintext highlighter-rouge">ApplicationContext</code>’s <code class="language-plaintext highlighter-rouge">getBeanDefinitionNames()</code> method throughout this article to check out the list of beans that have successfully been scanned and added to the application context:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">class</span> <span class="nc">BeanViewer</span> <span class="o">{</span>
+
+  <span class="kd">private</span> <span class="kd">final</span> <span class="nc">Logger</span> <span class="no">LOG</span> <span class="o">=</span> <span class="nc">LoggerFactory</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">getClass</span><span class="o">());</span>
+
+  <span class="nd">@EventListener</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">showBeansRegistered</span><span class="o">(</span><span class="nc">ApplicationReadyEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">String</span><span class="o">[]</span> <span class="n">beanNames</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="na">getApplicationContext</span><span class="o">()</span>
+      <span class="o">.</span><span class="na">getBeanDefinitionNames</span><span class="o">();</span>
+
+      <span class="k">for</span><span class="o">(</span><span class="nc">String</span> <span class="nl">beanName:</span> <span class="n">beanNames</span><span class="o">)</span> <span class="o">{</span>
+        <span class="no">LOG</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"{}"</span><span class="o">,</span> <span class="n">beanName</span><span class="o">);</span>
+      <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The above <code class="language-plaintext highlighter-rouge">BeanViewer</code> will print all the beans that are registered with the application context. This will help us to check whether our components are loaded properly or not.</p>
+
+<h3 id="spring-boots-implicit-auto-scanning">Spring Boot’s Implicit Auto Scanning</h3>
+
+<p>As said earlier, Spring Boot does auto scanning for all the packages that fall under the parent package. Let’s look at the folder structure:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|- io.reflectoring.componentscan (main package)
+   |- SpringComponentScanningApplication.java
+   |- UserService.java (@Service stereotype)
+   |- BeanViewer.java
+</code></pre></div></div>
+
+<p>We have created a <code class="language-plaintext highlighter-rouge">UserService</code> class with the <code class="language-plaintext highlighter-rouge">@Service</code> stereotype in our parent package <code class="language-plaintext highlighter-rouge">io.reflectoring.componentscan</code>. As said earlier, since these classes are under the parent package where we have our <code class="language-plaintext highlighter-rouge">@SpringBootApplication</code>-annotated application class, the component will be scanned by default when we start the Spring Boot application:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>...
+INFO 95832 --- [main] i.reflectoring.componentscan.BeanViewer  : beanViewer
+INFO 95832 --- [main] i.reflectoring.componentscan.BeanViewer  : users
+...
+</code></pre></div></div>
+
+<p>The above output shows the bean created for <code class="language-plaintext highlighter-rouge">BeanViewer</code>, <code class="language-plaintext highlighter-rouge">ExplicitScan</code>, and <code class="language-plaintext highlighter-rouge">Users</code> are printed out by our <code class="language-plaintext highlighter-rouge">BeanViewer</code>.</p>
+
+<h3 id="using-componentscan-without-any-attributes">Using <code class="language-plaintext highlighter-rouge">@ComponentScan</code> Without Any Attributes</h3>
+
+<p>If we have a package that is not under our parent package, or we’re not using Spring Boot at all, we can use <code class="language-plaintext highlighter-rouge">@ComponentScan</code> along with a <code class="language-plaintext highlighter-rouge">@Configuration</code> bean.</p>
+
+<p>This will tell Spring to scan the components in the package of this <code class="language-plaintext highlighter-rouge">@Configuration</code> class and its sub-packages:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">io.reflectoring.birds</span><span class="o">;</span>
+
+<span class="nd">@Configuration</span>
+<span class="nd">@ComponentScan</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BirdsExplicitScan</span> <span class="o">{</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">birds</code> package is next to the main package of the application, so it’s not caught by Spring Boot’s default scanning:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|- io.reflectoring.componentscan
+   |- SpringComponentScanningApplication.java
+|- io.reflectoring.birds
+   |- BirdsExplicitScan.java (@Configuration)
+   |- Eagle.java (@Component stereotype)
+   |- Sparrow.java (@Component stereotype)
+</code></pre></div></div>
+
+<p>If we want to include the <code class="language-plaintext highlighter-rouge">BirdsExplicitScan</code> into our Spring Boot application, we have to import it:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@SpringBootApplication</span>
+<span class="nd">@Import</span><span class="o">(</span><span class="n">value</span><span class="o">=</span> <span class="o">{</span><span class="nc">BirdsExplicitScan</span><span class="o">.</span><span class="na">class</span><span class="o">})</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SpringComponentScanningApplication</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">SpringApplication</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="nc">SpringComponentScanningApplication</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">args</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>When we start the application, we get the following output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>...
+INFO 95832 --- [main] i.reflectoring.componentscan.BeanViewer  : beanViewer
+INFO 95832 --- [main] i.reflectoring.componentscan.BeanViewer  : users
+INFO 84644 --- [main] i.reflectoring.componentscan.BeanViewer  : eagle
+INFO 84644 --- [main] i.reflectoring.componentscan.BeanViewer  : sparrow
+...
+</code></pre></div></div>
+
+<p>As we can see in the above output, beans got created for the <code class="language-plaintext highlighter-rouge">Eagle</code> and <code class="language-plaintext highlighter-rouge">Sparrow</code> classes.</p>
+
+<h3 id="using-componentscan-with-attributes">Using <code class="language-plaintext highlighter-rouge">@ComponentScan</code> with Attributes</h3>
+
+<p>Let’s have a look at attributes of the <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation that we can use to modify its behavior:</p>
+
+<ul>
+  <li><strong><code class="language-plaintext highlighter-rouge">basePackages</code></strong>: Takes a list of package names that should be scanned for components.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">basePackageClasses</code></strong>: Takes a list of classes whose packages should be scanned.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">includeFilters</code></strong>: Enables us to specify what types of components should be scanned.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">excludeFilters</code></strong>: This is the opposite of <code class="language-plaintext highlighter-rouge">includeFilters</code>. We can specify conditions to ignore some of the components based on criteria while scanning.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">useDefaultFilters</code></strong>: If true, it enables the automatic detection of classes annotated with any stereotypes. If false, the components which fall under filter criteria defined by <code class="language-plaintext highlighter-rouge">includeFilters</code> and <code class="language-plaintext highlighter-rouge">excludeFilters</code> will be included.</li>
+</ul>
+
+<p>To demonstrate the different attributes, let’s add some classes to the package <code class="language-plaintext highlighter-rouge">io.reflectoring.vehicles</code> (which is <em>not</em> a sub package of our application main package <code class="language-plaintext highlighter-rouge">io.reflectoring.componentscan</code>):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>|- io.reflectoring.componentscan (Main Package)
+   |- ExplicitScan.java (@Configuration)
+|- io.reflectoring.birds
+|- io.reflectoring.vehicles
+   |- Car.java
+   |- Hyundai.java (@Component stereotype and extends Car)
+   |- Tesla.java (@Component stereotype and extends Car)
+   |- SpaceX.java (@Service stereotype)
+   |- Train.java (@Service stereotype)
+</code></pre></div></div>
+
+<p>Let’s see how we can control which classes are loaded during a component scan.</p>
+
+<h3 id="scanning-a-whole-package-with-basepackages">Scanning a Whole Package with <code class="language-plaintext highlighter-rouge">basePackages</code></h3>
+
+<p>We’ll create the class <code class="language-plaintext highlighter-rouge">ExplicitScan</code> class in the application’s main package so it gets picked up by the default component scan. Then, we add the package <code class="language-plaintext highlighter-rouge">io.reflectoring.vehicles</code> package via the <code class="language-plaintext highlighter-rouge">basePackages</code> attribute of the <code class="language-plaintext highlighter-rouge">@ComponenScan</code> annotation:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">io.reflectoring.componentscan</span><span class="o">;</span>
+
+<span class="nd">@Configuration</span>
+<span class="nd">@ComponentScan</span><span class="o">(</span><span class="n">basePackages</span><span class="o">=</span> <span class="s">"io.reflectoring.vehicles"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExplicitScan</span> <span class="o">{</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>If we run the application, we see that all components in the <code class="language-plaintext highlighter-rouge">vehicles</code> package are included in the application context:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>...
+INFO 65476 --- [main] i.reflectoring.componentscan.BeanViewer  : hyundai
+INFO 65476 --- [main] i.reflectoring.componentscan.BeanViewer  : spaceX
+INFO 65476 --- [main] i.reflectoring.componentscan.BeanViewer  : tesla
+INFO 65476 --- [main] i.reflectoring.componentscan.BeanViewer  : train
+...
+</code></pre></div></div>
+
+<h3 id="including-components-with-includefilters">Including Components with <code class="language-plaintext highlighter-rouge">includeFilters</code></h3>
+
+<p>Let’s see how we can include only classes that extend the <code class="language-plaintext highlighter-rouge">Car</code> type for component scanning:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Configuration</span>
+<span class="nd">@ComponentScan</span><span class="o">(</span><span class="n">basePackages</span><span class="o">=</span> <span class="s">"io.reflectoring.vehicles"</span><span class="o">,</span>
+  <span class="n">includeFilters</span><span class="o">=</span>
+    <span class="nd">@ComponentScan</span><span class="o">.</span><span class="na">Filter</span><span class="o">(</span>
+      <span class="n">type</span><span class="o">=</span><span class="nc">FilterType</span><span class="o">.</span><span class="na">ASSIGNABLE_TYPE</span><span class="o">,</span>
+      <span class="n">classes</span><span class="o">=</span><span class="nc">Car</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+    <span class="n">useDefaultFilters</span><span class="o">=</span><span class="kc">false</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExplicitScan</span> <span class="o">{</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>With a combination of <code class="language-plaintext highlighter-rouge">includeFilters</code> and <code class="language-plaintext highlighter-rouge">FilterType</code>, we can tell Spring to include classes that follow specified filter criteria.</p>
+
+<p>We used the filter type <code class="language-plaintext highlighter-rouge">ASSIGNABLE_TYPE</code> to catch all classes that are assignable to / extend the <code class="language-plaintext highlighter-rouge">Car</code> class.</p>
+
+<p>Other available filter types are:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">ANNOTATION</code>: Match only classes with a specific stereotype annotation.</li>
+  <li><code class="language-plaintext highlighter-rouge">ASPECTJ</code>: Match classes using an AspectJ type pattern expression</li>
+  <li><code class="language-plaintext highlighter-rouge">ASSIGNABLE_TYPE</code>: Match classes that extend or implement this class or interface.</li>
+  <li><code class="language-plaintext highlighter-rouge">REGEX</code>: Match classes using a regular expression for package names.</li>
+</ul>
+
+<p>In the above example, we have modified our <code class="language-plaintext highlighter-rouge">ExplicitScan</code> class with <code class="language-plaintext highlighter-rouge">includeFilters</code> to include components that extend <code class="language-plaintext highlighter-rouge">Car.class</code> and we are changing <code class="language-plaintext highlighter-rouge">useDefaultFilters = false</code> so that only our specific filters are applied.</p>
+
+<p>Now, only the <code class="language-plaintext highlighter-rouge">Hyundai</code> and <code class="language-plaintext highlighter-rouge">Tesla</code> beans are being included in the component scan, because they extend the <code class="language-plaintext highlighter-rouge">Car</code> class:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>INFO 68628 --- [main] i.reflectoring.componentscan.BeanViewer  : hyundai
+INFO 68628 --- [main] i.reflectoring.componentscan.BeanViewer  : tesla
+</code></pre></div></div>
+
+<h3 id="excluding-components-with-excludefilters">Excluding Components with <code class="language-plaintext highlighter-rouge">excludeFilters</code></h3>
+
+<p>Similar to <code class="language-plaintext highlighter-rouge">includeFilters</code>, we can use <code class="language-plaintext highlighter-rouge">FilterType</code> with <code class="language-plaintext highlighter-rouge">excludeFilters</code> to exclude classes from getting scanned based on matching criteria.</p>
+
+<p>Let’s modify our <code class="language-plaintext highlighter-rouge">ExplicitScan</code> with <code class="language-plaintext highlighter-rouge">excludeFilters</code> and tell Spring to exclude classes that extend <code class="language-plaintext highlighter-rouge">Car</code> from component scanning.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Configuration</span>
+<span class="nd">@ComponentScan</span><span class="o">(</span><span class="n">basePackages</span><span class="o">=</span> <span class="s">"io.reflectoring.vehicles"</span><span class="o">,</span>
+  <span class="n">excludeFilters</span><span class="o">=</span>
+    <span class="nd">@ComponentScan</span><span class="o">.</span><span class="na">Filter</span><span class="o">(</span>
+      <span class="n">type</span><span class="o">=</span><span class="nc">FilterType</span><span class="o">.</span><span class="na">ASSIGNABLE_TYPE</span><span class="o">,</span>
+      <span class="n">classes</span><span class="o">=</span><span class="nc">Car</span><span class="o">.</span><span class="na">class</span><span class="o">))</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExplicitScan</span> <span class="o">{</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Note that we did not set <code class="language-plaintext highlighter-rouge">useDefaultFilters</code> to false, so that by default, Spring would include all classes in the package.</p>
+
+<p>The output shows that the <code class="language-plaintext highlighter-rouge">Hyundai</code> and <code class="language-plaintext highlighter-rouge">Tesla</code> beans we excluded and only the other two classes in the package were included in the scan:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>...
+INFO 97832 --- [main] i.reflectoring.componentscan.BeanViewer  : spaceX
+INFO 97832 --- [main] i.reflectoring.componentscan.BeanViewer  : train
+...
+</code></pre></div></div>
+
+<h2 id="make-your-component-scan-as-explicit-as-possible">Make Your Component Scan as Explicit as Possible</h2>
+
+<p>Using the <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation extensively can quickly lead to confusing rules on how your application is made up! Use it sparingly to make your application context rules as explicit as possible.</p>
+
+<p>A good practice is to explicitly import a <code class="language-plaintext highlighter-rouge">@Configuration</code> class with the <code class="language-plaintext highlighter-rouge">@Import</code> annotation and add the <code class="language-plaintext highlighter-rouge">@ComponentScan</code> annotation to that configuration class to auto-scan only the package of that class. This way, we have <a href="/java-components-clean-boundaries/#wiring-it-together-with-spring-boot">clean boundaries between the packages of our application</a>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In this article, we’ve learned about Spring component stereotypes, what is component scanning and how to use component scanning, and its various attributes which we can modify to get the desired scanning behavior.</p>
+:ET
